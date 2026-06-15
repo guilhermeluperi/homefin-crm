@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Homefin CRM</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -32,6 +33,12 @@ button { cursor: pointer; }
 .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
 .logo { font-size: 20px; font-weight: 600; color: var(--text); }
 .logo span { color: #185FA5; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.sync-status { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 5px; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #639922; }
+.sync-dot.loading { background: #EF9F27; animation: pulse 1s infinite; }
+.sync-dot.error { background: #E24B4A; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 .btn-primary { background: #185FA5; color: #fff; border: none; padding: 8px 18px; border-radius: var(--radius); font-weight: 500; display: flex; align-items: center; gap: 6px; font-size: 14px; }
 .btn-primary:hover { background: #0C447C; }
 .btn-ghost { background: transparent; border: 0.5px solid var(--border2); padding: 7px 14px; border-radius: var(--radius); font-size: 13px; color: var(--text2); }
@@ -46,7 +53,6 @@ button { cursor: pointer; }
 .view-tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
 .vtab { padding: 7px 16px; font-size: 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); cursor: pointer; background: transparent; color: var(--text2); display: flex; align-items: center; gap: 6px; }
 .vtab.active { background: var(--info-bg); color: var(--info-text); border-color: transparent; }
-/* Kanban */
 .pipeline-scroll { overflow-x: auto; padding-bottom: 8px; }
 .pipeline { display: grid; grid-template-columns: repeat(8, minmax(160px, 1fr)); gap: 8px; min-width: 1100px; }
 .col-header { font-size: 11px; font-weight: 600; color: var(--text2); padding: 7px 10px; border-radius: var(--radius) var(--radius) 0 0; border: 0.5px solid var(--border); border-bottom: none; background: var(--bg2); display: flex; align-items: center; justify-content: space-between; gap: 4px; }
@@ -69,7 +75,6 @@ button { cursor: pointer; }
 .add-col-btn { margin-top: 4px; width: 100%; padding: 6px; font-size: 12px; color: var(--text3); border: 0.5px dashed var(--border2); border-radius: var(--radius); cursor: pointer; background: transparent; display: flex; align-items: center; justify-content: center; gap: 4px; }
 .add-col-btn:hover { background: var(--bg2); color: var(--text2); }
 .empty-col { font-size: 11px; color: var(--text3); text-align: center; padding: 14px 0; }
-/* List */
 .list-view { display: none; }
 .list-view.active { display: block; }
 .kanban-view.hidden { display: none; }
@@ -82,7 +87,6 @@ tbody tr:hover td { background: var(--bg2); cursor: pointer; }
 .stage-pill { display: inline-block; font-size: 10px; padding: 3px 9px; border-radius: 99px; font-weight: 500; white-space: nowrap; }
 .del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 15px; padding: 3px 7px; border-radius: var(--radius); }
 .del-btn:hover { background: var(--danger-bg); color: var(--danger-text); }
-/* Modal */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
 .modal-overlay.open { display: flex; }
 .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border2); padding: 1.5rem; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
@@ -92,18 +96,23 @@ tbody tr:hover td { background: var(--bg2); cursor: pointer; }
 .fgroup input, .fgroup select, .fgroup textarea { width: 100%; }
 .fgroup textarea { resize: vertical; height: 76px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
-/* Detail */
 .detail-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
 .detail-row:last-child { border-bottom: none; }
 .detail-key { color: var(--text2); min-width: 130px; flex-shrink: 0; }
 .detail-val { color: var(--text); flex: 1; word-break: break-word; }
+.loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; gap: 12px; color: var(--text2); font-size: 14px; }
+.spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: #185FA5; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
     <span class="logo">Homefin <span>CRM</span></span>
-    <button class="btn-primary" onclick="openAdd(null)"><i class="ti ti-plus"></i> Novo lead</button>
+    <div class="topbar-right">
+      <span class="sync-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-text">Conectando...</span></span>
+      <button class="btn-primary" onclick="openAdd(null)"><i class="ti ti-plus"></i> Novo lead</button>
+    </div>
   </div>
   <div id="alert-wrap"></div>
   <div class="stats" id="stats"></div>
@@ -111,7 +120,7 @@ tbody tr:hover td { background: var(--bg2); cursor: pointer; }
     <button class="vtab active" id="tab-k" onclick="setView('k')"><i class="ti ti-layout-kanban"></i> Kanban</button>
     <button class="vtab" id="tab-l" onclick="setView('l')"><i class="ti ti-list"></i> Lista</button>
   </div>
-  <div class="kanban-view" id="kv"><div class="pipeline-scroll"><div class="pipeline" id="pipeline"></div></div></div>
+  <div class="kanban-view" id="kv"><div class="pipeline-scroll"><div class="pipeline" id="pipeline"><div class="loading-screen"><div class="spinner"></div>Carregando leads...</div></div></div></div>
   <div class="list-view" id="lv"><div class="table-wrap"><table><thead><tr><th>Nome</th><th>Empresa</th><th>Segmento</th><th>Etapa</th><th>Próximo passo</th><th>Data</th><th></th></tr></thead><tbody id="ltbody"></tbody></table></div></div>
 </div>
 
@@ -155,7 +164,7 @@ tbody tr:hover td { background: var(--bg2); cursor: pointer; }
     <div class="fgroup"><label>Notas</label><textarea id="f-notas" placeholder="Observações..."></textarea></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAll()">Cancelar</button>
-      <button class="btn-primary" onclick="saveLead()">Salvar</button>
+      <button class="btn-primary" id="btn-salvar" onclick="saveLead()">Salvar</button>
     </div>
   </div>
 </div>
@@ -187,6 +196,10 @@ tbody tr:hover td { background: var(--bg2); cursor: pointer; }
 </div>
 
 <script>
+const SUPABASE_URL = 'https://xblrdqhiugpeusxagmvo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Zx97lFOddGdEmkV89NaygQ_4L_Vtmpu';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const STAGES=['Lead novo','Primeiro contato feito','Reunião agendada','Proposta enviada','Em negociação','Contrato enviado','Fechado (ganho)','Perdido / Desqualificado'];
 const DOTS=['#888780','#378ADD','#EF9F27','#1D9E75','#D4537E','#EF9F27','#639922','#E24B4A'];
 const SPILLS=[
@@ -196,11 +209,26 @@ const SPILLS=[
 ];
 const SEGL={assessoria:'Assessoria',imobiliaria:'Imobiliária',correspondente:'Correspondente',outro:'Outro'};
 const SEGC={assessoria:'seg-assessoria',imobiliaria:'seg-imobiliaria',correspondente:'seg-correspondente',outro:'seg-outro'};
+const SEGFULL={assessoria:'Assessoria de Investimento',imobiliaria:'Imobiliária',correspondente:'Correspondente Bancário',outro:'Outro'};
 
 let leads=[], editId=null, detailId=null;
 
-function load(){ try{leads=JSON.parse(localStorage.getItem('hf_crm')||'[]');}catch(e){leads=[];} }
-function save(){ localStorage.setItem('hf_crm',JSON.stringify(leads)); }
+function setSyncStatus(status, text){
+  const dot=document.getElementById('sync-dot');
+  const txt=document.getElementById('sync-text');
+  dot.className='sync-dot'+(status==='loading'?' loading':status==='error'?' error':'');
+  txt.textContent=text;
+}
+
+async function loadLeads(){
+  setSyncStatus('loading','Carregando...');
+  const {data,error}=await sb.from('leads').select('*').order('criado_em',{ascending:false});
+  if(error){ setSyncStatus('error','Erro ao carregar'); console.error(error); return; }
+  leads=data||[];
+  setSyncStatus('ok','Sincronizado');
+  render();
+}
+
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
 function fmtDate(d){ if(!d)return''; const[y,m,day]=d.split('-'); return`${day}/${m}`; }
 
@@ -225,8 +253,8 @@ function renderKanban(){
     const cards=col.length===0?`<div class="empty-col">Nenhum lead</div>`:col.map(l=>{
       const sc=SEGC[l.seg||'']||'seg-outro', sl=SEGL[l.seg||'']||'';
       return`<div class="lead-card${i===5?' contrato':''}" onclick="openDetail('${l.id}')">
-        <div class="lead-name">${l.nome}</div>
-        <div class="lead-emp">${l.empresa||'—'}</div>
+        <div class="lead-name">${esc(l.nome)}</div>
+        <div class="lead-emp">${esc(l.empresa||'—')}</div>
         <div class="lead-meta">${sl?`<span class="seg-badge ${sc}">${sl}</span>`:''}${l.data?`<span class="lead-date">${fmtDate(l.data)}</span>`:''}</div>
       </div>`;
     }).join('');
@@ -243,17 +271,18 @@ function renderList(){
   tb.innerHTML=leads.map(l=>{
     const sc=SEGC[l.seg||'']||'seg-outro', sl=SEGL[l.seg||'']||'—', sp=SPILLS[l.etapa]||SPILLS[0];
     return`<tr onclick="openDetail('${l.id}')">
-      <td style="font-weight:500;">${l.nome}</td>
-      <td>${l.empresa||'—'}</td>
+      <td style="font-weight:500;">${esc(l.nome)}</td>
+      <td>${esc(l.empresa||'—')}</td>
       <td><span class="seg-badge ${sc}">${sl}</span></td>
       <td><span class="stage-pill" style="background:${sp.bg};color:${sp.c};">${STAGES[l.etapa]}</span></td>
-      <td style="max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.passo||'—'}</td>
+      <td style="max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(l.passo||'—')}</td>
       <td>${l.data?fmtDate(l.data):'—'}</td>
       <td onclick="event.stopPropagation()"><button class="del-btn" onclick="delById('${l.id}')"><i class="ti ti-trash"></i></button></td>
     </tr>`;
   }).join('');
 }
 
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 function render(){ renderAlert(); renderStats(); renderKanban(); renderList(); }
 function setView(v){
   document.getElementById('kv').classList.toggle('hidden',v!=='k');
@@ -274,12 +303,32 @@ function openAdd(etapa){
 }
 function closeAll(){ document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open')); }
 
-function saveLead(){
+async function saveLead(){
   const nome=document.getElementById('f-nome').value.trim();
   if(!nome){alert('Preencha o nome do lead.');return;}
-  const l={id:editId||uid(),nome,empresa:document.getElementById('f-empresa').value.trim(),seg:document.getElementById('f-seg').value,tel:document.getElementById('f-tel').value.trim(),email:document.getElementById('f-email').value.trim(),origem:document.getElementById('f-origem').value,etapa:parseInt(document.getElementById('f-etapa').value),passo:document.getElementById('f-passo').value.trim(),data:document.getElementById('f-data').value,notas:document.getElementById('f-notas').value.trim()};
-  if(editId){const i=leads.findIndex(x=>x.id===editId);if(i!==-1)leads[i]=l;}else leads.push(l);
-  save();render();closeAll();
+  const btn=document.getElementById('btn-salvar');
+  btn.textContent='Salvando...'; btn.disabled=true;
+  const l={
+    id: editId||uid(),
+    nome,
+    empresa:document.getElementById('f-empresa').value.trim(),
+    seg:document.getElementById('f-seg').value,
+    tel:document.getElementById('f-tel').value.trim(),
+    email:document.getElementById('f-email').value.trim(),
+    origem:document.getElementById('f-origem').value,
+    etapa:parseInt(document.getElementById('f-etapa').value),
+    passo:document.getElementById('f-passo').value.trim(),
+    data:document.getElementById('f-data').value||null,
+    notas:document.getElementById('f-notas').value.trim()
+  };
+  setSyncStatus('loading','Salvando...');
+  const {error}=await sb.from('leads').upsert(l);
+  btn.textContent='Salvar'; btn.disabled=false;
+  if(error){ setSyncStatus('error','Erro ao salvar'); alert('Erro ao salvar: '+error.message); return; }
+  setSyncStatus('ok','Sincronizado');
+  if(editId){ const i=leads.findIndex(x=>x.id===editId); if(i!==-1)leads[i]=l; }
+  else leads.unshift(l);
+  render(); closeAll();
 }
 
 function openDetail(id){
@@ -287,16 +336,26 @@ function openDetail(id){
   detailId=id;
   document.getElementById('d-name').textContent=l.nome+(l.empresa?` — ${l.empresa}`:'');
   document.getElementById('d-etapa').value=l.etapa;
-  const segFull={assessoria:'Assessoria de Investimento',imobiliaria:'Imobiliária',correspondente:'Correspondente Bancário',outro:'Outro'};
-  const rows=[['Segmento',segFull[l.seg]],['Empresa',l.empresa],['WhatsApp',l.tel],['E-mail',l.email],['Origem',l.origem],['Próximo passo',l.passo],['Data',l.data?l.data.split('-').reverse().join('/'):null],['Notas',l.notas]].filter(r=>r[1]);
-  document.getElementById('d-fields').innerHTML=rows.length?rows.map(r=>`<div class="detail-row"><span class="detail-key">${r[0]}</span><span class="detail-val">${r[1]}</span></div>`).join(''):`<p style="font-size:13px;color:var(--text2);padding:8px 0;">Sem informações adicionais.</p>`;
+  const rows=[
+    ['Segmento',SEGFULL[l.seg]],['Empresa',l.empresa],['WhatsApp',l.tel],
+    ['E-mail',l.email],['Origem',l.origem],['Próximo passo',l.passo],
+    ['Data',l.data?l.data.split('-').reverse().join('/'):null],['Notas',l.notas]
+  ].filter(r=>r[1]);
+  document.getElementById('d-fields').innerHTML=rows.length
+    ?rows.map(r=>`<div class="detail-row"><span class="detail-key">${r[0]}</span><span class="detail-val">${esc(r[1])}</span></div>`).join('')
+    :`<p style="font-size:13px;color:var(--text2);padding:8px 0;">Sem informações adicionais.</p>`;
   document.getElementById('m-detail').classList.add('open');
 }
 
-function updateStage(){
+async function updateStage(){
   const l=leads.find(x=>x.id===detailId); if(!l)return;
-  l.etapa=parseInt(document.getElementById('d-etapa').value);
-  save();render();
+  const novaEtapa=parseInt(document.getElementById('d-etapa').value);
+  setSyncStatus('loading','Salvando...');
+  const {error}=await sb.from('leads').update({etapa:novaEtapa}).eq('id',detailId);
+  if(error){ setSyncStatus('error','Erro'); return; }
+  l.etapa=novaEtapa;
+  setSyncStatus('ok','Sincronizado');
+  render();
 }
 
 function openEditFromDetail(){
@@ -316,19 +375,28 @@ function openEditFromDetail(){
   document.getElementById('m-add').classList.add('open');
 }
 
-function delLead(){
+async function delLead(){
   if(!confirm('Excluir este lead?'))return;
+  setSyncStatus('loading','Excluindo...');
+  const {error}=await sb.from('leads').delete().eq('id',detailId);
+  if(error){ setSyncStatus('error','Erro'); return; }
   leads=leads.filter(l=>l.id!==detailId);
-  save();render();closeAll();
+  setSyncStatus('ok','Sincronizado');
+  render(); closeAll();
 }
-function delById(id){
+
+async function delById(id){
   if(!confirm('Excluir este lead?'))return;
+  setSyncStatus('loading','Excluindo...');
+  const {error}=await sb.from('leads').delete().eq('id',id);
+  if(error){ setSyncStatus('error','Erro'); return; }
   leads=leads.filter(l=>l.id!==id);
-  save();render();
+  setSyncStatus('ok','Sincronizado');
+  render();
 }
 
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeAll();}));
-load();render();
+loadLeads();
 </script>
 </body>
 </html>
