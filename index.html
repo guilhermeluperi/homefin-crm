@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homefin CRM</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg2: #f5f5f4; --bg3: #efefed;
+  --text: #1a1a18; --text2: #6b6b67; --text3: #9c9c98;
+  --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+  --info-bg: #E6F1FB; --info-text: #185FA5;
+  --danger-bg: #FCEBEB; --danger-text: #A32D2D;
+  --radius: 8px; --radius-lg: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+    --text: #f0f0ec; --text2: #9c9c98; --text3: #6b6b67;
+    --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+    --info-bg: #0c2a45; --info-text: #85B7EB;
+    --danger-bg: #3a1515; --danger-text: #F09595;
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+input, select, textarea, button { font-family: inherit; color: var(--text); background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 8px 10px; font-size: 14px; outline: none; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: #185FA5; }
+button { cursor: pointer; }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1rem; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+.logo { font-size: 20px; font-weight: 600; color: var(--text); }
+.logo span { color: #185FA5; }
+.btn-primary { background: #185FA5; color: #fff; border: none; padding: 8px 18px; border-radius: var(--radius); font-weight: 500; display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.btn-primary:hover { background: #0C447C; }
+.btn-ghost { background: transparent; border: 0.5px solid var(--border2); padding: 7px 14px; border-radius: var(--radius); font-size: 13px; color: var(--text2); }
+.btn-ghost:hover { background: var(--bg2); }
+.btn-danger { background: transparent; border: 0.5px solid var(--border2); padding: 7px 14px; border-radius: var(--radius); font-size: 13px; color: var(--danger-text); }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+@media (max-width: 600px) { .stats { grid-template-columns: repeat(2,1fr); } }
+.stat-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; }
+.stat-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+.stat-val { font-size: 22px; font-weight: 600; }
+.alert-contrato { background: #FAEEDA; border: 0.5px solid #EF9F27; border-radius: var(--radius); padding: 9px 14px; font-size: 13px; color: #633806; margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 8px; }
+.view-tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+.vtab { padding: 7px 16px; font-size: 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); cursor: pointer; background: transparent; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.vtab.active { background: var(--info-bg); color: var(--info-text); border-color: transparent; }
+/* Kanban */
+.pipeline-scroll { overflow-x: auto; padding-bottom: 8px; }
+.pipeline { display: grid; grid-template-columns: repeat(8, minmax(160px, 1fr)); gap: 8px; min-width: 1100px; }
+.col-header { font-size: 11px; font-weight: 600; color: var(--text2); padding: 7px 10px; border-radius: var(--radius) var(--radius) 0 0; border: 0.5px solid var(--border); border-bottom: none; background: var(--bg2); display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.col-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.col-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col-count { font-size: 11px; background: var(--bg); border: 0.5px solid var(--border); border-radius: 99px; padding: 1px 8px; color: var(--text2); flex-shrink: 0; }
+.col-body { border: 0.5px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); min-height: 320px; padding: 6px; background: var(--bg); display: flex; flex-direction: column; gap: 6px; }
+.lead-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 9px 11px; cursor: pointer; transition: border-color 0.15s; }
+.lead-card:hover { border-color: var(--border2); }
+.lead-card.contrato { border-left: 2px solid #EF9F27; }
+.lead-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lead-emp { font-size: 11px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.lead-meta { display: flex; align-items: center; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
+.seg-badge { font-size: 10px; padding: 2px 7px; border-radius: 99px; font-weight: 500; }
+.seg-assessoria { background: #EEEDFE; color: #3C3489; }
+.seg-imobiliaria { background: #E1F5EE; color: #085041; }
+.seg-correspondente { background: #FAEEDA; color: #633806; }
+.seg-outro { background: var(--bg3); color: var(--text2); }
+.lead-date { font-size: 10px; color: var(--text3); margin-left: auto; }
+.add-col-btn { margin-top: 4px; width: 100%; padding: 6px; font-size: 12px; color: var(--text3); border: 0.5px dashed var(--border2); border-radius: var(--radius); cursor: pointer; background: transparent; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.add-col-btn:hover { background: var(--bg2); color: var(--text2); }
+.empty-col { font-size: 11px; color: var(--text3); text-align: center; padding: 14px 0; }
+/* List */
+.list-view { display: none; }
+.list-view.active { display: block; }
+.kanban-view.hidden { display: none; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--bg); border-radius: var(--radius-lg); overflow: hidden; border: 0.5px solid var(--border); }
+th { font-size: 11px; font-weight: 600; color: var(--text2); text-align: left; padding: 9px 12px; border-bottom: 0.5px solid var(--border); background: var(--bg2); }
+td { padding: 9px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg2); cursor: pointer; }
+.stage-pill { display: inline-block; font-size: 10px; padding: 3px 9px; border-radius: 99px; font-weight: 500; white-space: nowrap; }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 15px; padding: 3px 7px; border-radius: var(--radius); }
+.del-btn:hover { background: var(--danger-bg); color: var(--danger-text); }
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border2); padding: 1.5rem; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+.modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 1.25rem; }
+.fgroup { margin-bottom: 1rem; }
+.fgroup label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; }
+.fgroup input, .fgroup select, .fgroup textarea { width: 100%; }
+.fgroup textarea { resize: vertical; height: 76px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.25rem; }
+/* Detail */
+.detail-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-key { color: var(--text2); min-width: 130px; flex-shrink: 0; }
+.detail-val { color: var(--text); flex: 1; word-break: break-word; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <span class="logo">Homefin <span>CRM</span></span>
+    <button class="btn-primary" onclick="openAdd(null)"><i class="ti ti-plus"></i> Novo lead</button>
+  </div>
+  <div id="alert-wrap"></div>
+  <div class="stats" id="stats"></div>
+  <div class="view-tabs">
+    <button class="vtab active" id="tab-k" onclick="setView('k')"><i class="ti ti-layout-kanban"></i> Kanban</button>
+    <button class="vtab" id="tab-l" onclick="setView('l')"><i class="ti ti-list"></i> Lista</button>
+  </div>
+  <div class="kanban-view" id="kv"><div class="pipeline-scroll"><div class="pipeline" id="pipeline"></div></div></div>
+  <div class="list-view" id="lv"><div class="table-wrap"><table><thead><tr><th>Nome</th><th>Empresa</th><th>Segmento</th><th>Etapa</th><th>Próximo passo</th><th>Data</th><th></th></tr></thead><tbody id="ltbody"></tbody></table></div></div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="m-add">
+  <div class="modal">
+    <h2 id="m-title">Novo lead</h2>
+    <div class="fgroup"><label>Nome *</label><input id="f-nome" placeholder="Ex: João Silva" /></div>
+    <div class="fgroup"><label>Empresa</label><input id="f-empresa" placeholder="Ex: Assessoria XP" /></div>
+    <div class="fgroup"><label>Segmento *</label>
+      <select id="f-seg">
+        <option value="">Selecione...</option>
+        <option value="assessoria">Assessoria de Investimento</option>
+        <option value="imobiliaria">Imobiliária</option>
+        <option value="correspondente">Correspondente Bancário</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+    <div class="fgroup"><label>WhatsApp / Telefone</label><input id="f-tel" placeholder="(11) 99999-9999" /></div>
+    <div class="fgroup"><label>E-mail</label><input id="f-email" type="email" placeholder="joao@empresa.com" /></div>
+    <div class="fgroup"><label>Origem do lead</label>
+      <select id="f-origem">
+        <option value="">Selecione...</option>
+        <option>Indicação</option><option>LinkedIn</option><option>Instagram</option><option>Site</option><option>Evento</option><option>Cold outreach</option><option>Outro</option>
+      </select>
+    </div>
+    <div class="fgroup"><label>Etapa</label>
+      <select id="f-etapa">
+        <option value="0">Lead novo</option>
+        <option value="1">Primeiro contato feito</option>
+        <option value="2">Reunião agendada</option>
+        <option value="3">Proposta enviada</option>
+        <option value="4">Em negociação</option>
+        <option value="5">Contrato enviado — aguardando assinatura</option>
+        <option value="6">Fechado (ganho)</option>
+        <option value="7">Perdido / Desqualificado</option>
+      </select>
+    </div>
+    <div class="fgroup"><label>Próximo passo</label><input id="f-passo" placeholder="Ex: Cobrar assinatura do contrato" /></div>
+    <div class="fgroup"><label>Data do próximo passo</label><input id="f-data" type="date" /></div>
+    <div class="fgroup"><label>Notas</label><textarea id="f-notas" placeholder="Observações..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAll()">Cancelar</button>
+      <button class="btn-primary" onclick="saveLead()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="m-detail">
+  <div class="modal" style="max-width:520px;">
+    <h2 id="d-name"></h2>
+    <div class="fgroup" style="margin-bottom:1rem;">
+      <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Etapa</label>
+      <select id="d-etapa" onchange="updateStage()" style="width:100%;">
+        <option value="0">Lead novo</option>
+        <option value="1">Primeiro contato feito</option>
+        <option value="2">Reunião agendada</option>
+        <option value="3">Proposta enviada</option>
+        <option value="4">Em negociação</option>
+        <option value="5">Contrato enviado — aguardando assinatura</option>
+        <option value="6">Fechado (ganho)</option>
+        <option value="7">Perdido / Desqualificado</option>
+      </select>
+    </div>
+    <div id="d-fields"></div>
+    <div class="modal-actions" style="margin-top:1rem;">
+      <button class="btn-danger" onclick="delLead()"><i class="ti ti-trash"></i> Excluir</button>
+      <button class="btn-ghost" onclick="openEditFromDetail()"><i class="ti ti-edit"></i> Editar</button>
+      <button class="btn-primary" onclick="closeAll()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAGES=['Lead novo','Primeiro contato feito','Reunião agendada','Proposta enviada','Em negociação','Contrato enviado','Fechado (ganho)','Perdido / Desqualificado'];
+const DOTS=['#888780','#378ADD','#EF9F27','#1D9E75','#D4537E','#EF9F27','#639922','#E24B4A'];
+const SPILLS=[
+  {bg:'#f5f5f4',c:'#6b6b67'},{bg:'#E6F1FB',c:'#185FA5'},{bg:'#FAEEDA',c:'#633806'},
+  {bg:'#EAF3DE',c:'#3B6D11'},{bg:'#FBEAF0',c:'#993556'},{bg:'#FAEEDA',c:'#854F0B'},
+  {bg:'#E1F5EE',c:'#0F6E56'},{bg:'#FCEBEB',c:'#A32D2D'}
+];
+const SEGL={assessoria:'Assessoria',imobiliaria:'Imobiliária',correspondente:'Correspondente',outro:'Outro'};
+const SEGC={assessoria:'seg-assessoria',imobiliaria:'seg-imobiliaria',correspondente:'seg-correspondente',outro:'seg-outro'};
+
+let leads=[], editId=null, detailId=null;
+
+function load(){ try{leads=JSON.parse(localStorage.getItem('hf_crm')||'[]');}catch(e){leads=[];} }
+function save(){ localStorage.setItem('hf_crm',JSON.stringify(leads)); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function fmtDate(d){ if(!d)return''; const[y,m,day]=d.split('-'); return`${day}/${m}`; }
+
+function renderAlert(){
+  const p=leads.filter(l=>l.etapa===5);
+  const el=document.getElementById('alert-wrap');
+  el.innerHTML=p.length?`<div class="alert-contrato"><i class="ti ti-file-invoice" style="font-size:16px;flex-shrink:0;margin-top:1px;"></i><div><strong>${p.length} contrato${p.length>1?'s':''} aguardando assinatura:</strong> ${p.map(l=>l.nome).join(', ')}</div></div>`:'';
+}
+
+function renderStats(){
+  const t=leads.length, g=leads.filter(l=>l.etapa===6).length, c=leads.filter(l=>l.etapa===5).length, a=leads.filter(l=>l.etapa<7).length;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Total de leads</div><div class="stat-val">${t}</div></div>
+    <div class="stat-card"><div class="stat-label">Leads ativos</div><div class="stat-val">${a}</div></div>
+    <div class="stat-card"><div class="stat-label">Contratos pendentes</div><div class="stat-val" style="color:#854F0B;">${c}</div></div>
+    <div class="stat-card"><div class="stat-label">Parcerias fechadas</div><div class="stat-val" style="color:#3B6D11;">${g}</div></div>`;
+}
+
+function renderKanban(){
+  document.getElementById('pipeline').innerHTML=STAGES.map((s,i)=>{
+    const col=leads.filter(l=>l.etapa===i);
+    const cards=col.length===0?`<div class="empty-col">Nenhum lead</div>`:col.map(l=>{
+      const sc=SEGC[l.seg||'']||'seg-outro', sl=SEGL[l.seg||'']||'';
+      return`<div class="lead-card${i===5?' contrato':''}" onclick="openDetail('${l.id}')">
+        <div class="lead-name">${l.nome}</div>
+        <div class="lead-emp">${l.empresa||'—'}</div>
+        <div class="lead-meta">${sl?`<span class="seg-badge ${sc}">${sl}</span>`:''}${l.data?`<span class="lead-date">${fmtDate(l.data)}</span>`:''}</div>
+      </div>`;
+    }).join('');
+    return`<div>
+      <div class="col-header"><span style="display:flex;align-items:center;gap:5px;overflow:hidden;"><span class="col-dot" style="background:${DOTS[i]}"></span><span class="col-name">${s}</span></span><span class="col-count">${col.length}</span></div>
+      <div class="col-body">${cards}<button class="add-col-btn" onclick="openAdd(${i})"><i class="ti ti-plus"></i> Add</button></div>
+    </div>`;
+  }).join('');
+}
+
+function renderList(){
+  const tb=document.getElementById('ltbody');
+  if(!leads.length){tb.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem;">Nenhum lead. Clique em "Novo lead" para começar.</td></tr>`;return;}
+  tb.innerHTML=leads.map(l=>{
+    const sc=SEGC[l.seg||'']||'seg-outro', sl=SEGL[l.seg||'']||'—', sp=SPILLS[l.etapa]||SPILLS[0];
+    return`<tr onclick="openDetail('${l.id}')">
+      <td style="font-weight:500;">${l.nome}</td>
+      <td>${l.empresa||'—'}</td>
+      <td><span class="seg-badge ${sc}">${sl}</span></td>
+      <td><span class="stage-pill" style="background:${sp.bg};color:${sp.c};">${STAGES[l.etapa]}</span></td>
+      <td style="max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.passo||'—'}</td>
+      <td>${l.data?fmtDate(l.data):'—'}</td>
+      <td onclick="event.stopPropagation()"><button class="del-btn" onclick="delById('${l.id}')"><i class="ti ti-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function render(){ renderAlert(); renderStats(); renderKanban(); renderList(); }
+function setView(v){
+  document.getElementById('kv').classList.toggle('hidden',v!=='k');
+  document.getElementById('lv').classList.toggle('active',v==='l');
+  document.getElementById('tab-k').classList.toggle('active',v==='k');
+  document.getElementById('tab-l').classList.toggle('active',v==='l');
+}
+
+function openAdd(etapa){
+  editId=null;
+  document.getElementById('m-title').textContent='Novo lead';
+  ['f-nome','f-empresa','f-tel','f-email','f-passo','f-notas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-seg').value='';
+  document.getElementById('f-origem').value='';
+  document.getElementById('f-etapa').value=etapa!==null?etapa:0;
+  document.getElementById('f-data').value='';
+  document.getElementById('m-add').classList.add('open');
+}
+function closeAll(){ document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open')); }
+
+function saveLead(){
+  const nome=document.getElementById('f-nome').value.trim();
+  if(!nome){alert('Preencha o nome do lead.');return;}
+  const l={id:editId||uid(),nome,empresa:document.getElementById('f-empresa').value.trim(),seg:document.getElementById('f-seg').value,tel:document.getElementById('f-tel').value.trim(),email:document.getElementById('f-email').value.trim(),origem:document.getElementById('f-origem').value,etapa:parseInt(document.getElementById('f-etapa').value),passo:document.getElementById('f-passo').value.trim(),data:document.getElementById('f-data').value,notas:document.getElementById('f-notas').value.trim()};
+  if(editId){const i=leads.findIndex(x=>x.id===editId);if(i!==-1)leads[i]=l;}else leads.push(l);
+  save();render();closeAll();
+}
+
+function openDetail(id){
+  const l=leads.find(x=>x.id===id); if(!l)return;
+  detailId=id;
+  document.getElementById('d-name').textContent=l.nome+(l.empresa?` — ${l.empresa}`:'');
+  document.getElementById('d-etapa').value=l.etapa;
+  const segFull={assessoria:'Assessoria de Investimento',imobiliaria:'Imobiliária',correspondente:'Correspondente Bancário',outro:'Outro'};
+  const rows=[['Segmento',segFull[l.seg]],['Empresa',l.empresa],['WhatsApp',l.tel],['E-mail',l.email],['Origem',l.origem],['Próximo passo',l.passo],['Data',l.data?l.data.split('-').reverse().join('/'):null],['Notas',l.notas]].filter(r=>r[1]);
+  document.getElementById('d-fields').innerHTML=rows.length?rows.map(r=>`<div class="detail-row"><span class="detail-key">${r[0]}</span><span class="detail-val">${r[1]}</span></div>`).join(''):`<p style="font-size:13px;color:var(--text2);padding:8px 0;">Sem informações adicionais.</p>`;
+  document.getElementById('m-detail').classList.add('open');
+}
+
+function updateStage(){
+  const l=leads.find(x=>x.id===detailId); if(!l)return;
+  l.etapa=parseInt(document.getElementById('d-etapa').value);
+  save();render();
+}
+
+function openEditFromDetail(){
+  const l=leads.find(x=>x.id===detailId); if(!l)return;
+  closeAll(); editId=l.id;
+  document.getElementById('m-title').textContent='Editar lead';
+  document.getElementById('f-nome').value=l.nome;
+  document.getElementById('f-empresa').value=l.empresa||'';
+  document.getElementById('f-seg').value=l.seg||'';
+  document.getElementById('f-tel').value=l.tel||'';
+  document.getElementById('f-email').value=l.email||'';
+  document.getElementById('f-origem').value=l.origem||'';
+  document.getElementById('f-etapa').value=l.etapa;
+  document.getElementById('f-passo').value=l.passo||'';
+  document.getElementById('f-data').value=l.data||'';
+  document.getElementById('f-notas').value=l.notas||'';
+  document.getElementById('m-add').classList.add('open');
+}
+
+function delLead(){
+  if(!confirm('Excluir este lead?'))return;
+  leads=leads.filter(l=>l.id!==detailId);
+  save();render();closeAll();
+}
+function delById(id){
+  if(!confirm('Excluir este lead?'))return;
+  leads=leads.filter(l=>l.id!==id);
+  save();render();
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeAll();}));
+load();render();
+</script>
+</body>
+</html>
